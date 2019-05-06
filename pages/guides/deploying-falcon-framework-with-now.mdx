@@ -1,0 +1,142 @@
+import Guide from '~/components/layout/guide'
+import { TerminalInput } from '~/components/text/terminal'
+import { InlineCode } from '~/components/text/code'
+import { Image } from '~/components/media'
+import Caption from '~/components/text/caption'
+import Note from '~/components/text/note'
+import { GenericLink } from '~/components/text/link'
+import Card from '~/components/card'
+
+export const meta = {
+  title: 'Deploying Falcon Framework App with Now',
+  description: 'How to deploy your Falcon application with Now',
+  published: '2019-05-03T03:00:00.860Z',
+  authors: ['maldofirmansyah'],
+  url: '/guides/deploying-falcon-framework-with-now',
+  image:
+    'https://og-image.now.sh/**Deploy%20an%20Angular%20app**%20with%20Now.png?theme=light&md=1&fontSize=90px&images=https%3A%2F%2Fassets.zeit.co%2Fimage%2Fupload%2Ffront%2Fassets%2Fdesign%2Fnow-black.svg&images=https%3A%2F%2Fangular.io%2Fassets%2Fimages%2Flogos%2Fangular%2Fangular.svg&heights=250&heights=300',
+  editUrl: 'pages/guides/deploying-falcon-framework-with-now.mdx',
+  lastEdited: '2019-05-03T00:54:17.000Z'
+}
+
+Falcon is a bare-metal Python web API framework for building very fast app backends and microservices. At the time of this writing, we use Falcon version `2.0` but it should work with all versions. ZEIT use `Python 3.6` as defined in [Now Python Builders](https://zeit.co/docs/v2/deployments/official-builders/python-now-python/#version)
+
+In this guide, we will deploy a Falcon application with [ZEIT Now](/docs/v2) like the following: <https://falconapp-5sr0skfa2.now.sh/quote>
+
+## Step 1: Install Falcon
+
+The most straightforward way to set up an Falcon project is to use the [pip](https://pip.pypa.io/en/stable/installing/) then type on terminal. <TerminalInput>pip install falcon gunicorn</TerminalInput>
+
+Once the installation is complete, create new directory by typing <TerminalInput>mkdir falconapp && cd falconapp && nano index.py</TerminalInput> then copy and paste this code.
+
+```python
+import falcon
+
+class QuoteResource:
+    def on_get(self, req, resp):
+        """Handles GET requests"""
+        quote = {
+            'quote': (
+                "I've always been more interested in "
+                "the future than in the past."
+            ),
+            'author': 'Grace Hopper'
+        }
+
+        resp.media = quote
+
+app = falcon.API()
+app.add_route('/quote', QuoteResource())
+```
+
+This is minimal example on [Falcon Framework Website](https://falcon.readthedocs.io/en/stable/) with some modification. Here we change `api` to `app` to prevent 502 error on Now, because it's expecting name to be `app`.
+
+Then create `requirements.txt` to make packages are installed on `Now 2.0`
+<TerminalInput>touch requirements.txt && nano requirements.txt</TerminalInput>
+```
+falcon
+```
+
+After creating `requirements.txt`, run `gunicorn` to serve your app in the browser:
+
+<TerminalInput>gunicorn index:app</TerminalInput>
+<Caption>Running your Falcon application locally</Caption>
+
+Your browser will automatically be launched with the served Falcon app at <http://localhost:8000/>
+
+## Step 2: Deploy Your Falcon Project with Now
+
+With your Falcon application set up, it is ready to deploy live with [Now](/docs/v2).
+
+First, you need to provide Now with instructions on how to build your Falcon project using [a `now.json` configuration file](/docs/v2/deployments/configuration):
+
+```json
+{
+  "version": 2,
+  "name": "falconapp",
+  "builds": [
+    { "src": "*.py", "use": "@now/python@canary", "config": {"maxLambdaSize": "10mb"} }
+  ],
+  "routes": [
+    { "src": "/quote", "methods": ["GET"], "dest": "index.py" }
+  ],
+  "public": true
+}
+```
+
+<Caption>
+  A <InlineCode>now.json</InlineCode> configuration file that builds a Falcon project.
+</Caption>
+
+The `now.json` file allows you to achieve a few things with your deployment:
+
+- Defines a `version` property to ensure you are using the latest [Now 2.0 platform](/docs/v2/platform/overview) version.
+- Defines a project `name` that your deployments will be sorted under and known by under Now.
+- Defines a `builds` property as an array with one build step using `@now/python@canary` to instruct Now to statically build the project using now python builder latest build (nightly one). Then `config` `maxLambdaSize` set to `10mb` because build size around 6mb, a bit more than default `5mb`. More on `config` you can visit [Now 2.0 Configuration](https://zeit.co/docs/v2/deployments/configuration/)
+- Defines a `routes` property as an array that contains route objects to route all files to the right place.
+- Set public to `true`. More on `public` you can visit [Now 2.0 Configuration](https://zeit.co/docs/v2/deployments/configuration/#public)
+
+If you have not yet installed Now, you can do so by installing the [Now Desktop app](/docs/v2/getting-started/installation/#now-desktop) which installs Now CLI automatically, or by [installing Now CLI](/docs/v2/getting-started/installation/#now-cli) directly.
+
+Then, you can deploy from your terminal with just one command:
+
+<TerminalInput>now</TerminalInput>
+
+If you want your application to deploy automatically, you can [install the Now for GitHub app](/docs/v2/integrations/now-for-github/) and have updates for your GitHub repository deploy and alias on every push.
+
+When your app is deployed, you will receive a deployment URL like the one that was shown at the beginning of this guide: <https://falconapp-5sr0skfa2.now.sh/quote>
+
+<Note>
+  We used the{' '}
+  <GenericLink href="https://falconframework.org">
+    Falcon simple example
+  </GenericLink>{' '}
+  for the deployment. Download, extract and follow this guide to deploy.
+</Note>
+
+## Resources
+
+For more information on working with Falcon, please refer to [their documentation](https://falcon.readthedocs.io/en/stable/).
+
+To configure Now further, please see these additional topics and guides:
+
+<Card title="Deploying Basics" href="/docs/v2/deployments/basics">
+  Deploy any of your applications with ZEIT Now.
+</Card>
+
+<Card
+  title="Aliasing"
+  href="/docs/v2/domains-and-aliases/aliasing-a-deployment/"
+>
+  Learn more about aliasing to your deployments.
+</Card>
+
+<Card title="www. Redirect" href="/guides/redirect-from-www">
+  Create a redirect from the www. subdomain to your naked domain.
+</Card>
+
+<Card title="More Guides" href="/guides">
+  See more guides that help you move forward with your projects and deployments.
+</Card>
+
+export default ({ children }) => <Guide meta={meta}>{children}</Guide>
