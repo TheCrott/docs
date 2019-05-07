@@ -75,7 +75,7 @@ First, you need to provide Now with instructions on how to build your Falcon pro
   "version": 2,
   "name": "falconapp",
   "builds": [
-    { "src": "*.py", "use": "@now/python@canary", "config": {"maxLambdaSize": "10mb"} }
+    { "src": "*.py", "use": "@now/python", "config": {"maxLambdaSize": "10mb"} }
   ],
   "routes": [
     { "src": "/quote", "methods": ["GET"], "dest": "index.py" }
