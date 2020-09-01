@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import Link from 'next/link'
+import NextLink from 'next/link'
 import cn from 'classnames'
 import { withRouter } from 'next/router'
 import PropTypes from 'prop-types'
@@ -26,10 +26,41 @@ class AutoComplete extends Component {
   }
 
   componentDidMount() {
+    document.addEventListener('keyup', this.onKeyUp.bind(this), false)
+
     if (this.props.router.query.query) {
       this.setState({
         value: decodeURIComponent(this.props.router.query.query) || ''
       })
+    }
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keyup', this.onKeyUp.bind(this), false)
+  }
+
+  onKeyUp(event) {
+    const el = document.activeElement
+
+    // Don't focus the autocomplete if focus is inside an input
+    if (
+      el &&
+      (el.contentEditable === 'true' ||
+        el.tagName === 'INPUT' ||
+        el.tagName === 'TEXTAREA' ||
+        el.tagName === 'SELECT')
+    ) {
+      return
+    }
+
+    if (event.key == 'Escape') {
+      this.input.blur()
+    }
+  }
+
+  storeInputReference = autosuggest => {
+    if (autosuggest !== null) {
+      this.input = autosuggest.input
     }
   }
 
@@ -76,7 +107,7 @@ class AutoComplete extends Component {
 
   renderSuggestion = hit => {
     return (
-      <Link
+      <NextLink
         href={`${hit.url}?query=${encodeURIComponent(this.state.value)}${
           hit.anchor ? `${hit.anchor}` : ''
         }`}
@@ -98,10 +129,15 @@ class AutoComplete extends Component {
             </span>
           )}
           <span className="suggestion__content">
-            <Snippet hit={hit} attribute="content" tagName="mark" />
+            <Snippet
+              width="100%"
+              hit={hit}
+              attribute="content"
+              tagName="mark"
+            />
           </span>
         </a>
-      </Link>
+      </NextLink>
     )
   }
 
@@ -146,6 +182,7 @@ class AutoComplete extends Component {
           )}
 
           <AutoSuggest
+            ref={this.storeInputReference}
             suggestions={hits}
             onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
             onSuggestionsClearRequested={this.onSuggestionsClearRequested}

@@ -1,59 +1,43 @@
 import formatDate from 'date-fns/format'
 
-import Layout from '~/components/layout/layout'
 import Head from '~/components/layout/head'
 import Wrapper from '~/components/layout/wrapper'
-import { H1, H4, P } from '~/components/text'
+import { H1, H3, P } from '~/components/text'
 import { AvatarGroup } from '~/components/avatar'
-import { GenericLink } from '~/components/text/link'
-import Button from '~/components/buttons'
+import Link from '~/components/text/link'
 import guides from '~/lib/data/guides.json'
-
-const sortedGuides = guides.sort(
-  (a, b) => new Date(b.published) - new Date(a.published)
-)
+import { PRODUCT_NAME } from '~/lib/constants'
+import Footer from '~/components/footer'
 
 const Guides = () => (
-  <Layout>
+  <>
     <Head
       titlePrefix=""
       titleSuffix=""
-      title="ZEIT Now Guides"
-      description="Learn how to quickly deploy with Now in any situation."
+      title={`${PRODUCT_NAME} Guides`}
+      description={`Learn how to quickly deploy with ${PRODUCT_NAME} in any situation.`}
     />
 
     <div className="guides">
       <div className="guide-heading">
         <Wrapper>
           <H1>Guides</H1>
-          <P>A list of guides for using Now with any project.</P>
-
-          <div className="actions">
-            <span className="caption">Sorted by Newest</span>
-            <GenericLink
-              href="https://github.com/zeit/docs/issues/new?labels=Section%3A+Guides&template=guide-report-or-request.md"
-              underlineOnHover={false}
-            >
-              <Button secondary small>
-                Request a Guide
-              </Button>
-            </GenericLink>
-          </div>
+          <P>A list of guides for using {PRODUCT_NAME} with any project.</P>
         </Wrapper>
       </div>
 
       <Wrapper>
         <div className="guide-list">
-          {sortedGuides.map((guide, i) => (
-            <GenericLink href={guide.url} key={`${guide.title}.${i}`}>
+          {guides.map((guide, i) => (
+            <Link href={guide.url} key={`${guide.title}.${i}`}>
               <article className="guide">
                 <div className="titles">
-                  <H4>{guide.title}</H4>
-                  <P>{guide.description}</P>
+                  <H3>{guide.title}</H3>
+                  <P style={{ color: '#444' }}>{guide.description}</P>
                 </div>
                 <div className="meta">
                   <span className="date">
-                    {formatDate(guide.published, 'MMMM Do YYYY')}
+                    Created on {formatDate(guide.published, 'MMMM Do YYYY')}
                   </span>
                   <AvatarGroup
                     size={24}
@@ -63,16 +47,16 @@ const Guides = () => (
                   />
                 </div>
               </article>
-            </GenericLink>
+            </Link>
           ))}
 
-          <GenericLink href="https://github.com/zeit/docs/blob/master/CONTRIBUTING.md#guides">
+          <Link href="https://github.com/vercel/docs/blob/master/CONTRIBUTING.md#guides">
             <article className="guide contribute">
               <div className="titles">
-                <H4>Write Your Guide →</H4>
+                <H3>Write Your Guide →</H3>
                 <P>
-                  Write about using Now in combination with a technology of your
-                  choosing and get featured!
+                  Write about using {PRODUCT_NAME} in combination with a
+                  technology of your choosing and get featured!
                 </P>
               </div>
               <div className="meta">
@@ -80,12 +64,17 @@ const Guides = () => (
                 <div className="avatar">You</div>
               </div>
             </article>
-          </GenericLink>
+          </Link>
         </div>
       </Wrapper>
+      <Footer />
     </div>
 
     <style jsx>{`
+      .titles {
+        margin-right: var(--geist-gap);
+      }
+
       .guides {
         min-height: 100vh;
         padding-bottom: 64px;
@@ -109,20 +98,6 @@ const Guides = () => (
         font-size: 16px;
         margin-top: 8px;
         color: #444444;
-      }
-
-      .actions {
-        margin-top: 40px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .actions .caption {
-        text-transform: uppercase;
-        color: #666;
-        font-size: 12px;
-        margin-right: 5px;
       }
 
       .guide-list {
@@ -160,11 +135,12 @@ const Guides = () => (
         justify-content: space-between;
         padding: 24px 0;
         position: relative;
+        color: #000;
       }
 
-      .guide :global(h4) {
-        margin-top: 0;
+      .guide :global(h3) {
         color: #000;
+        margin: 0;
       }
 
       .guide :global(p) {
@@ -177,7 +153,7 @@ const Guides = () => (
         width: auto;
       }
 
-      .guide:hover :global(h4) {
+      .guide:hover :global(h3) {
         text-decoration: underline;
       }
 
@@ -185,7 +161,7 @@ const Guides = () => (
         margin-top: 24px;
       }
 
-      .guide.contribute :global(h4) {
+      .guide.contribute :global(h3) {
       }
 
       .guide.contribute :global(p) {
@@ -215,7 +191,7 @@ const Guides = () => (
 
       .date {
         color: #666;
-        font-size: var(--font-size-primary);
+        font-size: var(--font-size-small);
         line-height: var(--line-height-primary);
       }
 
@@ -238,7 +214,7 @@ const Guides = () => (
         }
       }
     `}</style>
-  </Layout>
+  </>
 )
 
 export default Guides

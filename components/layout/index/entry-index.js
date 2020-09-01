@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import NextLink from '~/components/text/link'
 import cns from 'classnames'
 import { Component } from 'react'
 import * as metrics from '~/lib/metrics'
@@ -18,6 +18,25 @@ class EntryIndex extends Component {
       section: section.slug,
       entry: entry.slug
     })
+
+    if (entry.subEntries) {
+      entry.subEntries.map(subEntry => {
+        const { href, as } = getHref({
+          category: category.slug,
+          section: section.slug,
+          entry: entry.slug,
+          subEntry: subEntry.slug
+        })
+
+        this.props.setInitiallyActive({
+          href: as || href,
+          category: category.slug,
+          section: section.slug,
+          entry: entry.slug,
+          subEntry: subEntry.slug
+        })
+      })
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -65,14 +84,14 @@ class EntryIndex extends Component {
             {entry.title}
           </a>
         ) : (
-          <Link href={href} as={as}>
+          <NextLink href={href} as={as}>
             <a
               className={cns({ active: isEntryActive(this.props) })}
               onClick={this.handleClick}
             >
               {entry.title}
             </a>
-          </Link>
+          </NextLink>
         )}
         <style jsx>{`
           a {

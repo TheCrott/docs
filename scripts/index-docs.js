@@ -7,7 +7,7 @@ const globby = require('globby')
 const md5 = require('md5')
 
 const execP = promisify(execSync)
-const exec = cmd => execP(cmd)
+const exec = (cmd) => execP(cmd)
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
 const nextConfigPath = 'next.config.js'
@@ -40,29 +40,26 @@ async function main() {
   try {
     files = await globby([
       'dist/guides/**/*.html',
-      'dist/docs/v2/**/*.html',
-      'dist/docs/api/v2/**/*.html',
-      'dist/docs/integrations/v2/**/*.html',
-      'dist/docs/now-cli/**/*.html',
-      'dist/docs/configuration/**/*.html',
-      'dist/docs/builders/**/*.html'
+      'dist/knowledge/**/*.html',
+      'dist/docs/**/*.html',
     ])
     // filter out AMP pages
-    files = files.filter(f => f.indexOf('.amp/index.html') < 0)
+    files = files.filter((f) => f.indexOf('.amp/index.html') < 0)
   } catch (e) {
     throw `Failed to get pages: ${e}`
   }
 
   // Loop through files
-  files.forEach(file => {
-    const isAPISection = !!file.startsWith('dist/docs/api/v2')
+  files.forEach((file) => {
+    const isAPISection = !!file.startsWith('dist/docs/api')
     const isRefSection =
-      !!file.startsWith('dist/docs/now-cli') ||
-      !!file.startsWith('dist/docs/builders') ||
+      !!file.startsWith('dist/docs/cli') ||
+      !!file.startsWith('dist/docs/runtimes') ||
       !!file.startsWith('dist/docs/configuration') ||
-      !!file.startsWith('dist/docs/integrations/v2')
-    const isDocs = !!file.startsWith('dist/docs/v2')
+      !!file.startsWith('dist/docs/integrations')
+    const isDocs = !!file.startsWith('dist/docs/') && !isRefSection
     const isGuides = !!file.startsWith('dist/guides')
+    const isKnowledge = !!file.startsWith('dist/knowledge')
 
     // Fetch file contents and load it with cheerio
     const content = fs.readFileSync(file)
@@ -91,9 +88,7 @@ async function main() {
         // Set current heading:
         currentHeading = {
           text: currentEl.text(),
-          anchor: $(currentEl)
-            .children('a')
-            .attr('href')
+          anchor: $(currentEl).children('a').attr('href'),
         }
 
         if (tag === 'h1') {
@@ -107,7 +102,11 @@ async function main() {
         // If the element is a paragraph, create the record using available information, including the current heading, and push it to the index array.
 
         // Infer URL from filepath
-        const url = `/${file.replace('dist/', '').replace('/index.html', '')}`
+        const url = `/${file
+          .replace('dist/', '')
+          .replace('/index.html', '')
+          .replace('.amp', '')
+          .replace('.html', '')}`
 
         // Create record with title, (if it exists) section heading, url (inferred), paragraph content, and order
         const record = {
@@ -128,8 +127,9 @@ async function main() {
             (isAPISection && 'api') ||
               (isRefSection && 'reference') ||
               (isDocs && 'docs') ||
-              (isGuides && 'guide')
-          ]
+              (isGuides && 'guide') ||
+              (isKnowledge && 'knowledge'),
+          ],
         }
 
         // Push record to index array
@@ -142,6 +142,7 @@ async function main() {
   })
 
   // Test file
+  // Before uncommenting the next line, make sure all Algolia lines are commented out. (18 -> 21, 156 -> 167)
   // fs.writeFileSync(`test.json`, JSON.stringify(index))
 
   // Get settings of main index and set them to the temp index

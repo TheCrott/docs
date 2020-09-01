@@ -40,21 +40,26 @@ export default function List({
   // need to wrap each child with a `<Item>`
   return (
     <div className="geist-list">
-      {React.Children.map(children, child => (
-        <Item
-          halfGap={halfGap}
-          columns={[+columnsDesktop, +columnsTablet, +columnsMobile]}
-        >
-          {child}
-        </Item>
-      ))}
+      {React.Children.map(children, child =>
+        child ? (
+          <Item
+            halfGap={halfGap}
+            columns={[+columnsDesktop, +columnsTablet, +columnsMobile]}
+          >
+            {child}
+          </Item>
+        ) : (
+          undefined
+        )
+      )}
       <style jsx>{`
         .geist-list {
           display: flex;
           flex-wrap: wrap;
-          margin: ${halfGap
-            ? 'var(--geist-gap-quarter-negative)'
-            : 'var(--geist-gap-half-negative)'};
+          margin: 0
+            ${halfGap
+              ? 'var(--geist-gap-quarter-negative)'
+              : 'var(--geist-gap-half-negative)'};
         }
       `}</style>
     </div>

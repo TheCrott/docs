@@ -1,11 +1,9 @@
 import cn from 'classnames'
-import ZenContext from '~/lib/zen-context'
 
-const getContent = (zenModeActive, children, center, small) => {
+const Content = ({ children, center, small }) => {
   return (
     <div
       className={cn('content', {
-        'content-zen-mode': zenModeActive,
         center,
         small
       })}
@@ -21,6 +19,7 @@ const getContent = (zenModeActive, children, center, small) => {
 
         .content.small {
           flex: 0 0 672px;
+          max-width: 672px;
         }
 
         .content.center {
@@ -31,10 +30,6 @@ const getContent = (zenModeActive, children, center, small) => {
           margin-left: auto;
           max-width: calc(100% - 280px);
           padding-left: 24px;
-        }
-
-        .content-zen-mode {
-          padding-left: 0;
         }
 
         @media screen and (max-width: 950px) {
@@ -49,11 +44,5 @@ const getContent = (zenModeActive, children, center, small) => {
     </div>
   )
 }
-
-const Content = ({ children, center, small }) => (
-  <ZenContext.Consumer>
-    {zenModeActive => getContent(zenModeActive, children, center, small)}
-  </ZenContext.Consumer>
-)
 
 export default Content

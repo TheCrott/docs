@@ -1,435 +1,452 @@
 // Packages
 import PropTypes from 'prop-types'
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import cn from 'classnames'
+import titlize from 'title'
 
 import LoadingDots from '~/components/loading-dots'
+import Animation from './button-animation'
 
-class Button extends React.Component {
-  constructor(props) {
-    super(props)
+import withType from '~/lib/with-type'
+import { useDisabled } from '~/lib/with-disabled-context'
 
-    this.state = {
-      animationStartAt: null
+const ButtonBase = ({
+  Component = 'button',
+  typeName = 'text',
+  title,
+  disabled,
+  icon,
+  iconAutoSize,
+  iconRight,
+  iconPush,
+  iconOffset,
+  textOffset,
+  iconNoColorOverride,
+  iconNoStrokeOverride = true,
+  loading,
+  small,
+  medium,
+  large,
+  shadow,
+  width,
+  children,
+  onClick,
+  disableEvents,
+  normalStyle = {},
+  hoverStyle = {},
+  innerRef,
+  animation: _animation,
+  themeColor,
+  type,
+  className,
+  inputSize,
+  ...props
+}) => {
+  const [
+    { animationStartAt, animationX, animationY },
+    setAnimationData
+  ] = useState({
+    animationStartAt: null,
+    animationX: null,
+    animationY: null
+  })
+  const buttonRef = useRef(null)
+  const disabledContext = useDisabled()
+  const animation = !(_animation === false) && shadow !== true
+
+  const onButtonClick = ev => {
+    if (disabled || disabledContext) return
+
+    if (animation) {
+      const ref = innerRef || buttonRef
+      if (ref.current) {
+        const rect = buttonRef.current.getBoundingClientRect()
+        setAnimationData({
+          animationStartAt: Date.now(),
+          animationX: ev.clientX - rect.left,
+          animationY: ev.clientY - rect.top
+        })
+      }
     }
-
-    this.el = null
-    this.onClick = this.onClick.bind(this)
-    this.onElement = this.onElement.bind(this)
-    this.onAnimationComplete = this.onAnimationComplete.bind(this)
-  }
-
-  onClick(ev) {
-    const { disabled, onClick } = this.props
-    if (disabled) return
-
-    const rect = this.el.getBoundingClientRect()
-
-    this.setState({
-      animationStartAt: Date.now(),
-      animationX: ev.clientX - rect.left,
-      animationY: ev.clientY - rect.top
-    })
 
     if (onClick) {
-      onClick()
+      onClick(ev)
     }
   }
 
-  onElement(el) {
-    this.el = el
-  }
+  const restProps = { ...props }
 
-  onAnimationComplete() {
-    this.setState({
-      animationStartAt: null,
-      animationX: null,
-      animationY: null
-    })
-  }
+  return (
+    <Component
+      role="button"
+      ref={buttonRef}
+      title={title}
+      onClick={onButtonClick}
+      type={typeName}
+      disabled={disabled || disabledContext}
+      className={cn(
+        'button',
+        {
+          disabled: disabled || disabledContext,
+          shadow,
+          small,
+          medium,
+          'icon-color': !iconNoColorOverride,
+          'icon-stroke': !iconNoStrokeOverride,
+          loading,
+          'auto-size': iconAutoSize,
+          'geist-no-events': disableEvents
+        },
+        className
+      )}
+      {...(innerRef ? { ref: innerRef } : {})}
+      {...restProps}
+    >
+      {icon && !loading ? <span className="icon">{icon}</span> : null}
 
-  render() {
-    const { darkBg, disabled: disabledContext } = this.context
-    const {
-      children,
-      loading,
-      disabled,
-      icon,
-      iconRight,
-      iconPush,
-      small,
-      warning,
-      title,
-      active,
-      abort,
-      highlight,
-      type = 'text',
-      color = '#fff',
-      bgColor = '#000',
-      secondaryColor,
-      secondary,
-      iconColor,
-      Component = 'button',
-      ...props
-    } = this.props
-    let { width } = this.props
-    const { animationStartAt, animationX, animationY } = this.state
-    props.width = undefined
+      {/* Always show the text to ensure the width is correct.
+          The text will be visbility: hidden when in loading state */}
+      <span className="text">
+        {typeof children === 'string' ? titlize(children) : children}
+      </span>
 
-    // backwards compatibility
-    if (width === undefined && !small) {
-      // small buttons default to being flexible width
-      width = 200
-    }
+      {loading && (
+        <span className="loading-dots">
+          <LoadingDots size={4} />
+        </span>
+      )}
 
-    return (
-      <Component
-        role="button"
-        ref={this.onElement}
-        title={title}
-        onClick={this.onClick}
-        type={type}
-        disabled={disabled || disabledContext}
-        className={cn(
-          'button',
-          {
-            dark: darkBg,
-            small,
-            warning,
-            highlight,
-            active,
-            loading,
-            secondary,
-            abort
-          },
-          disabled || disabledContext ? 'disabled' : 'not-disabled',
-          icon && iconRight ? 'icon--right' : null,
-          icon && iconPush ? 'icon--push' : null
-        )}
-        {...props}
-      >
-        {icon && !loading ? <span className="icon">{icon}</span> : null}
-        <b>
-          {children}
-          {loading && (
-            <span className="loading-shim">
-              <LoadingDots size="big" />
-            </span>
-          )}
-        </b>
-        {this.state.animationStartAt && (
-          <Animation
-            key={animationStartAt}
-            x={animationX}
-            y={animationY}
-            onComplete={this.onAnimationComplete}
-          />
-        )}
-        <style jsx>{`
-          .button {
-            appearance: none;
-            align-items: center;
-            color: ${color};
-            background: ${bgColor};
-            display: inline-flex;
-            width: ${width != null ? `${width}px` : 'auto'};
-            height: 40px;
-            padding: 0 25px;
-            outline: none;
-            border: 1px solid ${bgColor};
-            font-size: 12px;
-            justify-content: center;
-            text-transform: capitalize;
-            cursor: pointer;
-            text-align: center;
-            user-select: none;
-            font-weight: 100;
-            position: relative;
-            overflow: hidden;
-            transition: border 0.2s, background 0.2s, color 0.2s ease-out;
-            border-radius: 5px;
-            white-space: nowrap;
-            text-decoration: none;
-            line-height: 0;
-          }
-
-          .button.secondary {
-            background: #fff;
-            border: 1px solid #eaeaea;
-            color: ${secondaryColor || '#666'};
-          }
-
-          .button.secondary.dark {
-            background: #000;
-            border: 1px solid #666;
-            color: ${secondaryColor || '#999'};
-          }
-
-          .button .icon {
-            position: absolute;
-            left: 8px;
-            top: 9px;
-          }
-
-          .button.icon--push:not(.icon--right) {
-            padding-left: 42px;
-          }
-
-          .button.icon--right.icon--push {
-            padding-right: 42px;
-          }
-
-          .button .icon :global(svg) {
-            height: 20px;
-            width: 20px;
-          }
-
-          .button .icon :global(path) {
-            fill: ${iconColor || color};
-            transition: fill 0.2s ease;
-          }
-
-          .button.secondary.icon--right .icon {
-            right: 8px;
-            left: auto;
-          }
-
-          .button.secondary .icon :global(path) {
-            fill: ${iconColor || '#999'};
-          }
-
-          .button.disabled .icon :global(path) {
-            fill: ${iconColor || '#ccc'};
-          }
-
-          .button b {
-            display: inline-block;
-            overflow: none;
-            z-index: 100;
-            font-weight: 500;
-            /* relative positioning is needed so that
-            * the text can show up on top of the
-            * animated layer shown upon click */
-            position: relative;
-          }
-
-          .button:hover,
-          .button.active {
-            border: 1px solid ${bgColor};
-            background: ${bgColor !== '#000' ? 'transparent' : '#fff'};
-            color: #000;
-          }
-
-          .button.secondary:hover,
-          .button.secondary.active {
-            color: ${secondaryColor || '#000'};
-            border-color: ${secondaryColor || '#000'};
-            background: #fff;
-          }
-
-          .button.not-disabled:hover :global(path),
-          .button.not-disabled.active :global(path) {
-            fill: ${bgColor};
-            stroke: ${bgColor};
-          }
-
-          .button.secondary.not-disabled:hover :global(path),
-          .button.secondary.not-disabled.active :global(path) {
-            fill: currentColor;
-            stroke: none;
-          }
-
-          .button.warning {
-            border-color: #eb5757;
-            background-color: #eb5757;
-            color: #fff;
-          }
-
-          .button.warning:hover,
-          .button.warning.active {
-            color: #eb5757;
-            background: #fff;
-          }
-
-          .button.highlight {
-            border-color: #007aff;
-            background-color: #007aff;
-            color: #fff;
-          }
-
-          .button.highlight:hover,
-          .button.highlight.active {
-            color: #007aff;
-            background: #fff;
-          }
-
-          .button.disabled {
-            background: #fafafa;
-            border-color: #eaeaea;
-            color: #ccc;
-            cursor: not-allowed;
-          }
-          .button.dark.disabled {
-            background: #111;
-            border: 1px solid #333;
-            color: #333;
-          }
-
-          .button.dark {
-            color: #000;
-            border: 2px solid #fff;
-            background: #fff;
-          }
-
-          .button.dark:hover,
-          .button.dark.active {
-            color: #fff;
-            border: 1px solid #fff;
-            background: ${bgColor};
-          }
-
-          .button.small {
-            height: 24px;
-            width: ${width != null ? `${width}px` : 'auto'};
-            padding: 0 10px;
-            font-size: 12px;
-          }
-
-          .button.loading {
-            pointer-events: none;
-            background: #fafafa;
-            border-color: #eaeaea;
-            color: transparent;
-            position: relative;
-          }
-
-          .loading-shim {
-            position: absolute;
-            top: 0;
-            right: 0;
-            left: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .button.dark.loading {
-            background-color: #585858;
-            border-color: #585858;
-            color: #585858;
-          }
-
-          .button.abort {
-            background-color: transparent;
-            border-color: transparent;
-            color: #666;
-          }
-          .button.abort.button.disabled {
-            color: #ccc;
-          }
-        `}</style>
-      </Component>
-    )
-  }
-}
-
-Button.contextTypes = {
-  darkBg: PropTypes.bool,
-  disabled: PropTypes.bool
-}
-
-class Animation extends React.Component {
-  constructor(props) {
-    super(props)
-    this.el = null
-    this.onElement = this.onElement.bind(this)
-    this.onAnimationEnd = this.onAnimationEnd.bind(this)
-  }
-
-  onElement(el) {
-    this.el = el
-    if (el) {
-      el.addEventListener('animationend', this.onAnimationEnd)
-    }
-  }
-
-  onAnimationEnd() {
-    if (this.props.onComplete) {
-      this.props.onComplete()
-    }
-  }
-
-  render() {
-    return (
-      <div ref={this.onElement} className={this.context.darkBg ? 'dark' : ''}>
-        <svg
-          style={{
-            top: this.props.y - 10,
-            left: this.props.x - 10
+      {animation && animationStartAt && (
+        <Animation
+          key={animationStartAt}
+          x={animationX}
+          y={animationY}
+          onComplete={() => {
+            setAnimationData({
+              animationStartAt: null,
+              animationX: null,
+              animationY: null
+            })
           }}
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          version="1.1"
-          xmlns="http://www.w3.org/2000/svg"
-          xmlnsXlink="http://www.w3.org/1999/xlink"
-        >
-          <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
-            <g fill="#ddd">
-              <rect width="100%" height="100%" rx="10" />
-            </g>
-          </g>
-        </svg>
+        />
+      )}
 
-        <style jsx>{`
-          div {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+      {/* Dynamic Styles */}
+      <style jsx>{`
+        /* Order of precendence:
+            type="..."
+            themeColor
+            normalStyle/hoverStyle
+        */
+        .button {
+          /* Use button- variables here because you cannot fallback to existing value
+             i.e. you cannot do --themed-fg: var(--themed-fg); */
+          --button-fg: ${type
+            ? 'var(--themed-fg)'
+            : themeColor
+            ? '#fff'
+            : normalStyle.color || 'var(--geist-background)'};
+          --button-bg: ${type
+            ? 'var(--themed-bg)'
+            : themeColor ||
+              normalStyle.backgroundColor ||
+              'var(--geist-foreground)'};
+          --button-border: ${type
+            ? 'var(--themed-border)'
+            : themeColor ||
+              normalStyle.borderColor ||
+              'var(--geist-foreground)'};
+        }
+
+        .button:hover,
+        .button:focus,
+        .button:active {
+          /* Use -hover variables here for the same reason */
+          --button-fg-hover: ${type
+            ? 'var(--button-bg)'
+            : themeColor || hoverStyle.color || 'var(--geist-foreground)'};
+          --button-bg-hover: ${type
+            ? 'transparent'
+            : hoverStyle.backgroundColor};
+          --button-border-hover: ${type
+            ? 'var(--button-bg)'
+            : themeColor ||
+              hoverStyle.borderColor ||
+              'var(--geist-foreground)'};
+        }
+      `}</style>
+
+      <style jsx>{`
+        .button {
+          /* base */
+          appearance: none;
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+
+          /* typography */
+          text-align: center;
+          text-decoration: none;
+          line-height: ${inputSize ? '34px' : '38px'};
+          white-space: nowrap;
+          font-weight: 500;
+          font-family: var(--font-sans);
+
+          /* size */
+          min-width: ${width
+            ? typeof width === 'number'
+              ? width + 'px'
+              : width
+            : '200px'};
+          height: ${large
+            ? '50px;'
+            : inputSize
+            ? 'calc(9 * var(--geist-space))'
+            : '40px'};
+          padding: 0 ${icon && iconPush && iconRight ? 55 : 25}px 0
+            ${icon && iconPush && !iconRight ? 55 : 25}px;
+          border-radius: var(--geist-radius);
+          font-size: ${large ? '1rem' : '0.875rem'};
+          flex-shrink: 0;
+          margin: 0;
+
+          /* color */
+          color: var(--button-fg);
+          background-color: var(--button-bg);
+          border: 1px solid var(--button-border);
+
+          /* other */
+          transition: all 0.2s ease;
+          user-select: none;
+          cursor: pointer;
+          overflow: hidden;
+          outline: none;
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent;
+          -webkit-touch-callout: none;
+        }
+
+        /* Ghost buttons break the rules */
+        .button.geist-themed.geist-ghost {
+          --button-fg-hover: var(--geist-foreground);
+          --button-bg-hover: transparent;
+          --button-border-hover: transparent;
+        }
+
+        /* Secondary buttons break the rules */
+        .button.geist-themed.geist-secondary {
+          --button-fg: var(--accents-5);
+          --button-bg: var(--geist-background);
+          --button-border: var(--accents-2);
+        }
+        .button.geist-themed.geist-secondary.shadow {
+          --button-border: transparent;
+        }
+        .button.geist-themed.geist-secondary:not(.shadow):hover,
+        .button.geist-themed.geist-secondary:not(.shadow):focus,
+        .button.geist-themed.geist-secondary:not(.shadow):active {
+          --button-fg-hover: var(--geist-foreground);
+          --button-bg-hover: var(--geist-background);
+          --button-border-hover: var(--geist-foreground);
+        }
+
+        /* Shadow hover styles should be the same as non-hovered */
+        .button.shadow:hover,
+        .button.shadow:focus,
+        .button.shadow:active {
+          --button-fg-hover: var(--button-fg);
+          --button-bg-hover: var(--button-bg);
+          --button-border-hover: var(--button-border);
+        }
+
+        /* Sizes */
+        .button.small {
+          min-width: ${width
+            ? typeof width === 'number'
+              ? width + 'px'
+              : width
+            : 'auto'};
+          height: 24px;
+          line-height: 22px;
+          padding: 0 ${icon && iconPush && iconRight ? 15 : 10}px 0
+            ${icon && iconPush && !iconRight ? 15 : 10}px;
+        }
+        .button.small .icon {
+          left: ${iconRight ? 'auto' : '11px'};
+          right: ${iconRight ? '12px' : 'auto'};
+        }
+        .button.medium {
+          min-width: ${width
+            ? typeof width === 'number'
+              ? width + 'px'
+              : width
+            : 'auto'};
+          height: 32px;
+          line-height: 0;
+          font-size: 0.875rem;
+          padding: 6px ${icon && iconPush && iconRight ? 45 : 12}px 6px
+            ${icon && iconPush && !iconRight ? 45 : 12}px;
+        }
+        // we match input height on mobile devices (inputs are higher on mobile)
+        @media only screen and (max-device-width: 780px) and (-webkit-min-device-pixel-ratio: 0) {
+          button {
+            ${inputSize ? 'height: calc(2 * var(--geist-gap));' : ''}
           }
+        }
 
-          svg {
-            position: absolute;
-            animation: 400ms ease-in expand;
-            animation-fill-mode: forwards;
-            width: 20px;
-            height: 20px;
-          }
+        /* Shadow modifier */
+        .button.shadow {
+          font-weight: 400;
+          box-shadow: var(--shadow-small);
+        }
 
-          div.dark g g {
-            fill: #333;
-          }
+        /* Button text */
+        .button .text {
+          position: relative;
+          z-index: 1;
+          margin-left: ${textOffset ? `${textOffset}px` : '0'};
+        }
 
-          @keyframes expand {
-            0% {
-              opacity: 0;
-              transform: scale(1);
-            }
+        /* Button icon */
+        .button .icon {
+          position: absolute;
+          display: flex;
+          align-items: center;
+          top: 0;
+          bottom: 0;
+          z-index: 1;
+          left: ${iconRight ? 'auto' : `${iconOffset || 22}px`};
+          right: ${iconRight ? `${iconOffset || 22}px` : 'auto'};
+          color: var(--button-fg);
+        }
+        .button.medium .icon {
+          left: ${iconRight ? 'auto' : `${iconOffset || 15}px`};
+          right: ${iconRight ? `${iconOffset || 15}px` : 'auto'};
+        }
+        .button.auto-size .icon :global(svg) {
+          height: 20px;
+          width: 20px;
+        }
+        .button.icon-color .icon :global(path) {
+          fill: var(--button-fg);
+          transition: fill 0.2s ease, color 0.2s ease;
+        }
+        .button.icon-stroke .icon :global(path) {
+          stroke: var(--button-fg);
+          transition: stroke 0.2s ease, color 0.2s ease;
+        }
 
-            30% {
-              opacity: 1;
-            }
+        /* Hover style */
+        .button:hover,
+        .button:focus,
+        .button:active,
+        .button:focus-within {
+          color: var(--button-fg-hover);
+          background-color: var(--button-bg-hover);
+          border-color: var(--button-border-hover);
+        }
 
-            80% {
-              opacity: 0.5;
-            }
+        .button:hover .icon,
+        .button:focus .icon,
+        .button:active .icon,
+        .button:focus-within .icon {
+          color: var(--button-fg-hover);
+        }
 
-            100% {
-              transform: scale(25);
-              opacity: 0;
-            }
-          }
-        `}</style>
-      </div>
-    )
-  }
+        .button.icon-color:hover .icon :global(path),
+        .button.icon-color:focus .icon :global(path),
+        .button.icon-color:active .icon :global(path) {
+          fill: var(--button-fg-hover);
+        }
+        .button.icon-stroke:hover .icon :global(path),
+        .button.icon-stroke:focus .icon :global(path),
+        .button.icon-stroke:active .icon :global(path) {
+          stroke: var(--button-fg-hover);
+        }
+        .button.shadow:hover,
+        .button.shadow:focus,
+        .button.shadow:active {
+          box-shadow: var(--shadow-medium);
+          transform: translate3d(0px, -1px, 0px);
+        }
+
+        /* Disabled style */
+        .button.disabled {
+          cursor: not-allowed;
+          background: var(--accents-1);
+          border-color: var(--accents-2);
+          color: var(--accents-4);
+          filter: grayscale(1);
+        }
+        .button.disabled .icon {
+          color: var(--accents-4);
+        }
+        .button.disabled .icon :global(svg) {
+          opacity: 0.4;
+        }
+        .button.disabled.icon-color .icon :global(path) {
+          fill: var(--accents-4);
+        }
+        .button.disabled.stroke-color .icon :global(path) {
+          stroke: var(--accents-4);
+        }
+        .button.disabled.shadow:hover,
+        .button.disabled.shadow:focus,
+        .button.disabled.shadow:active {
+          box-shadow: var(--shadow-medium);
+          transform: unset;
+        }
+
+        /* loading style */
+        .button.loading {
+          background: var(--accents-1);
+          border-color: var(--accents-2);
+          color: var(--accents-4);
+          cursor: default;
+          pointer-events: none;
+          filter: grayscale(1);
+        }
+        .button.loading .text {
+          visibility: hidden;
+        }
+        .button.loading .loading-dots {
+          position: absolute;
+          display: inline-flex;
+        }
+      `}</style>
+    </Component>
+  )
 }
 
-Animation.contextTypes = {
-  darkBg: PropTypes.bool
+ButtonBase.propTypes = {
+  Component: PropTypes.string,
+  typeName: PropTypes.string,
+  title: PropTypes.string,
+  disabled: PropTypes.bool,
+  icon: PropTypes.element,
+  iconAutoSize: PropTypes.bool,
+  iconRight: PropTypes.bool,
+  iconPush: PropTypes.bool,
+  iconNoColorOverride: PropTypes.bool,
+  iconNoStrokeOverride: PropTypes.bool,
+  loading: PropTypes.bool,
+  small: PropTypes.bool,
+  large: PropTypes.bool,
+  shadow: PropTypes.bool,
+  width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  onClick: PropTypes.func,
+  normalStyle: PropTypes.object,
+  hoverStyle: PropTypes.object,
+  animation: PropTypes.bool,
+  themeColor: PropTypes.string
 }
 
-export default Button
+const Button = (props, ref) => {
+  return <ButtonBase {...props} innerRef={ref} />
+}
+
+export default withType(React.forwardRef(Button), {
+  defaultFill: true,
+  hasFill: false
+})

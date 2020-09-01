@@ -1,7 +1,3 @@
-import Introduction from './v2/introduction.mdx'
+import Introduction from './introduction.mdx'
 
 export default Introduction
-
-export const config = {
-  amp: 'hybrid'
-}

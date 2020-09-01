@@ -1,4 +1,4 @@
-import { GenericLink } from '~/components/text/link'
+import Link from '~/components/text/link'
 import cn from 'classnames'
 
 const NavigationItem = ({
@@ -7,15 +7,16 @@ const NavigationItem = ({
   className,
   href,
   onClick,
-  customLink
+  customLink,
+  as
 }) => (
   <span className={cn({ active }, className, 'navigation-item')}>
     {customLink ? (
       children
     ) : (
-      <GenericLink href={href} as={href} onClick={onClick}>
+      <Link href={href} as={as} onClick={onClick}>
         {children}
-      </GenericLink>
+      </Link>
     )}
     <style jsx>{`
       .navigation-item,

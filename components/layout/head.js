@@ -7,12 +7,13 @@ import NProgress from 'nprogress'
 import debounce from 'lodash.debounce'
 import RouterEvents from '../../lib/router-events'
 import * as metrics from '../../lib/metrics'
+import { ORG_NAME } from '~/lib/constants'
 
 let title
 
 const start = debounce(NProgress.start, 200)
 RouterEvents.on('routeChangeStart', start)
-RouterEvents.on('routeChangeComplete', url => {
+RouterEvents.on('routeChangeComplete', (url) => {
   start.cancel()
   NProgress.done()
 
@@ -25,9 +26,13 @@ RouterEvents.on('routeChangeError', () => {
 
 if (global.document) {
   const info = [
-    `Version: ${process.env.VERSION}`,
-    `Check out our code here: https://zeit.co/oss`,
-    `Have a great day! 📣🐢`
+    ...(process.env.NOW_GITHUB_COMMIT_SHA
+      ? [
+          `Commit: https://github.com/vercel/docs/commit/${process.env.NOW_GITHUB_COMMIT_SHA}`,
+        ]
+      : []),
+    `Check out our code here: https://vercel.com/oss`,
+    `Have a great day! 📣🐢`,
   ]
 
   for (const message of info) {
@@ -40,7 +45,7 @@ function updateTitle(newTitle) {
   title = newTitle
 }
 
-const HeadTags = props => {
+const HeadTags = (props) => {
   const isAmp = useAmp()
   return isAmp ? null : (
     <>
@@ -49,8 +54,8 @@ const HeadTags = props => {
         rel="canonical"
         href={
           props.url ||
-          `https://zeit.co${props.router.asPath}` ||
-          'https://zeit.co/docs'
+          `https://vercel.com${props.router.asPath}` ||
+          'https://vercel.com/docs'
         }
       />
     </>
@@ -66,18 +71,24 @@ class Head extends React.PureComponent {
 
   render() {
     const titlePrefix =
-      null != this.props.titlePrefix ? this.props.titlePrefix : 'ZEIT – '
+      null != this.props.titlePrefix ? this.props.titlePrefix : `${ORG_NAME} – `
     const titleSuffix =
       null != this.props.titleSuffix ? this.props.titleSuffix : ''
     const ogDescription = this.props.ogDescription || this.props.description
-    const { darkBg } = this.context
     return (
-      <div>
+      <>
         <NextHead>
+          <link
+            rel="preload"
+            href="https://assets.vercel.com/raw/upload/v1587415301/fonts/2/inter-var-latin.woff2"
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
           <title>{titlePrefix + this.props.title + titleSuffix}</title>
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:site" content="@zeithq" />
-          <meta property="og:site_name" content="ZEIT Documentation" />
+          <meta name="twitter:site" content="@vercel" />
+          <meta property="og:site_name" content={`${ORG_NAME} Documentation`} />
           <meta property="og:type" content="website" />
           <meta
             property="og:title"
@@ -92,8 +103,8 @@ class Head extends React.PureComponent {
             property="og:url"
             content={
               this.props.url ||
-              `https://zeit.co${this.props.router.asPath}` ||
-              'https://zeit.co/docs'
+              `https://vercel.com${this.props.router.asPath}` ||
+              'https://vercel.com/docs'
             }
           />
           <HeadTags {...this.props} />
@@ -109,7 +120,7 @@ class Head extends React.PureComponent {
               this.props.image ||
               `https://og-image.now.sh/${encodeURIComponent(
                 this.props.ogTitle || this.props.title
-              )}.png?theme=light&md=1&fontSize=75px&images=https%3A%2F%2Fassets.zeit.co%2Fimage%2Fupload%2Ffront%2Fassets%2Fdesign%2Fnow-black.svg`
+              )}.png?theme=light&md=1&fontSize=75px&images=https%3A%2F%2Fassets.vercel.com%2Fimage%2Fupload%2Ffront%2Fassets%2Fdesign%2Fzeit-black-triangle.svg`
             }
           />
           {this.props.image ? (
@@ -119,212 +130,157 @@ class Head extends React.PureComponent {
             ? [
                 <meta property="og:type" content="video" key="0" />,
                 <meta property="og:video" content={this.props.video} key="1" />,
-                <meta property="og:video:type" content="video/mp4" key="2" />
+                <meta property="og:video:type" content="video/mp4" key="2" />,
               ]
             : null}
 
           <link
             rel="apple-touch-icon"
             sizes="57x57"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-57x57.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/57x57.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="60x60"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-60x60.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/60x60.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="72x72"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-72x72.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/72x72.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="76x76"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-76x76.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/76x76.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="114x114"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-114x114.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/114x114.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="120x120"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-120x120.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/120x120.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="144x144"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-144x144.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/144x144.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="152x152"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-152x152.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/152x152.png`}
           />
           <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/apple-touch-icon-180x180.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/180x180.png`}
           />
           <link
             rel="icon"
             type="image/png"
-            href={`${process.env.IMAGE_ASSETS_URL}/favicon/favicon-32x32.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/32x32.png`}
             sizes="32x32"
           />
           <link
             rel="icon"
             type="image/png"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/android-chrome-192x192.png`}
-            sizes="192x192"
-          />
-          <link
-            rel="icon"
-            type="image/png"
-            href={`${process.env.IMAGE_ASSETS_URL}/favicon/favicon-96x96.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/96x96.png`}
             sizes="96x96"
           />
           <link
             rel="icon"
             type="image/png"
-            href={`${process.env.IMAGE_ASSETS_URL}/favicon/favicon-16x16.png`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/16x16.png`}
             sizes="16x16"
           />
           <link
             rel="manifest"
-            href={`${process.env.RAW_ASSETS_URL}/favicon/manifest.json`}
+            href="https://assets.vercel.com/raw/upload/v1573246315/front/favicon/round-2/site.webmanifest"
           />
           <link
             rel="mask-icon"
-            href={`${
-              process.env.IMAGE_ASSETS_URL
-            }/favicon/safari-pinned-tab.svg`}
-            color="#ffffff"
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/safari-pinned-tab.svg`}
+            color="#000000"
           />
+
           <link
             rel="shortcut icon"
-            href={`${process.env.IMAGE_ASSETS_URL}/favicon/favicon.ico`}
+            href={`${process.env.IMAGE_ASSETS_URL}/favicon/round-2/favicon.ico`}
           />
           <meta name="theme-color" content="#000" />
+
+          {this.props.noIndex && <meta name="robots" content="noindex" />}
 
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
-              __html: `
-            {
-              "@type": "WebPage",
-              "url": "${this.props.url ||
-                `https://zeit.co${this.props.router.asPath}` ||
-                'https://zeit.co/docs'}",
-              "headline": "${this.props.ogTitle ||
-                this.props.title ||
-                'ZEIT Documentation'}",
-              ${
-                this.props.description
-                  ? '"description": "' + this.props.description + '",'
-                  : null
-              }
-              "image": "${this.props.image ||
-                `${process.env.IMAGE_ASSETS_URL}/zeit/twitter-card.png`}",
-              "name": "${titlePrefix +
-                (this.props.ogTitle ||
-                  this.props.title ||
-                  'ZEIT Documentation') +
-                titleSuffix}",
-              "dateModified": "${
-                this.props.lastEdited ? this.props.lastEdited : null
-              }",
-              "lastReviewed": "${
-                this.props.lastEdited ? this.props.lastEdited : null
-              }",
-              "author": {
-                "@type": "Person",
-                "name": "ZEIT"
-              },
-              "publisher": {
-                "@type": "Organization",
-                "logo": {
-                  "@type": "ImageObject",
-                  "url": "${`${
-                    process.env.IMAGE_ASSETS_URL
-                  }/favicon/favicon-96x96.png`}"
-                },
-                "name": "ZEIT"
-              },
-              "@context": "http:\/\/schema.org"
-            }
-          `
+              __html: JSON.stringify(
+                Object.assign(
+                  {
+                    '@type': 'WebPage',
+                    url:
+                      this.props.url ||
+                      `https://vercel.com${this.props.router.asPath}` ||
+                      'https://vercel.com/docs',
+                    headline:
+                      this.props.ogTitle ||
+                      this.props.title ||
+                      `${ORG_NAME} Documentation`,
+                    image:
+                      this.props.image ||
+                      `${process.env.IMAGE_ASSETS_URL}/zeit/twitter-card.png`,
+                    name:
+                      titlePrefix +
+                      (this.props.ogTitle ||
+                        this.props.title ||
+                        `${ORG_NAME} Documentation`) +
+                      titleSuffix,
+                    dateModified: this.props.lastEdited
+                      ? this.props.lastEdited
+                      : null,
+                    lastReviewed: this.props.lastEdited
+                      ? this.props.lastEdited
+                      : null,
+                    author: {
+                      '@type': 'Person',
+                      name: ORG_NAME,
+                    },
+                    publisher: {
+                      '@type': 'Organization',
+                      logo: {
+                        '@type': 'ImageObject',
+                        url: `${process.env.IMAGE_ASSETS_URL}/favicon/favicon-96x96.png`,
+                      },
+                      name: ORG_NAME,
+                    },
+                    '@context': 'http://schema.org',
+                  },
+                  this.props.description
+                    ? { description: this.props.description }
+                    : undefined
+                )
+              ),
             }}
           />
 
           {this.props.children}
         </NextHead>
-        <style jsx global>
-          {`
-            #nprogress {
-              pointer-events: none;
-            }
-            #nprogress .bar {
-              position: fixed;
-              z-index: 2000;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 2px;
-            }
-            #nprogress .peg {
-              display: block;
-              position: absolute;
-              right: 0px;
-              width: 100px;
-              height: 100%;
-              opacity: 1;
-              transform: rotate(3deg) translate(0px, -4px);
-            }
-          `}
-        </style>
-        <style jsx global>
-          {`
-            #nprogress .bar {
-              background: ${darkBg ? '#fff' : '#000'};
-            }
-
-            #nprogress .peg {
-              box-shadow: ${darkBg
-                ? '0 0 10px #fff, 0 0 5px #fff'
-                : '0 0 10px #ccc, 0 0 5px #ccc'};
-            }
-          `}
-        </style>
-      </div>
+      </>
     )
   }
 }
 
-Head.contextTypes = {
-  darkBg: PropTypes.bool
+Head.propTypes = {
+  darkBg: PropTypes.bool,
+  noIndex: PropTypes.bool,
+}
+
+Head.defaultProps = {
+  noIndex: false,
 }
 
 export default withRouter(Head)
